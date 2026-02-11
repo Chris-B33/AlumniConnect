@@ -1,0 +1,18 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run deployment (dummy)
+        run: echo "Deployment step passed!"
+
+      - name: Run smoke tests (dummy)
+        run: echo "Smoke tests passed!"
