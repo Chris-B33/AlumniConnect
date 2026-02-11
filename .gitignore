@@ -1,0 +1,107 @@
+Here is a clean monorepo .gitignore tailored for:
+
+Multiple Spring Boot (Maven) services
+
+React frontend (Node)
+
+Docker
+
+IntelliJ / VS Code
+
+macOS / Windows
+
+You can place this at the root of your repository.
+
+########################################
+# OS FILES
+########################################
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+########################################
+# IDEs
+########################################
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+########################################
+# LOG FILES
+########################################
+*.log
+logs/
+log/
+
+########################################
+# MAVEN / JAVA (Spring Boot Services)
+########################################
+target/
+*.jar
+*.war
+*.ear
+
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+########################################
+# SPRING BOOT
+########################################
+application-local.yml
+application-dev.yml
+
+########################################
+# NODE / REACT (Frontend)
+########################################
+node_modules/
+build/
+dist/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+########################################
+# ENV FILES
+########################################
+.env
+.env.*
+!.env.example
+
+########################################
+# DOCKER
+########################################
+docker-compose.override.yml
+
+########################################
+# DATABASE FILES
+########################################
+*.db
+*.sqlite
+*.h2.db
+
+########################################
+# TEST OUTPUT
+########################################
+surefire-reports/
+failsafe-reports/
+
+########################################
+# TEMP FILES
+########################################
+*.swp
+*.swo
+*~
