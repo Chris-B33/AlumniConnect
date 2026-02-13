@@ -1,8 +1,8 @@
-<img alt="Static Badge" src="https://img.shields.io/badge/wiki-green">
-
 # AlumniConnect  
 ### CS4135 – Software Architectures  
 University of Limerick  
+
+<a href="https://github.com/Chris-B33/AlumniConnect/wiki"><img alt="Static Badge" src="https://img.shields.io/badge/wiki-green"></a>
 
 ---
 
