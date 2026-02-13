@@ -1,4 +1,4 @@
-<img alt="Static Badge" src="https://img.shields.io/badge/wiki">
+<img alt="Static Badge" src="https://img.shields.io/badge/wiki-green">
 
 # AlumniConnect  
 ### CS4135 – Software Architectures  
