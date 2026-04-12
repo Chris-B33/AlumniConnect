@@ -1,0 +1,34 @@
+server:
+  port: 8082
+
+# Resilience4j — Mentorship → Identity (and screenshot-friendly tuning)
+resilience4j:
+  circuitbreaker:
+    instances:
+      identityService:
+        registerHealthIndicator: true
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 2
+        slowCallDurationThreshold: 2s
+        slowCallRateThreshold: 50
+  retry:
+    instances:
+      identityRetry:
+        maxAttempts: 3
+        waitDuration: 250ms
+        retryExceptions:
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,retries
+  health:
+    circuitbreakers:
+      enabled: true

@@ -1,0 +1,14 @@
+# Shared defaults for every application (merged with <name>.yml from this repo)
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
