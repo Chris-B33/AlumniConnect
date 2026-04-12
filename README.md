@@ -39,7 +39,7 @@ Continuous integration (`.github/workflows/ci.yml`) runs on **`main`** and **`de
 | **Shauna** | System architect and repo lead | Root `README.md`, `docs/`, `adr/` | `feature/shauna-readme-architecture`, `feature/shauna-adrs-wiki` | PR → **Noa** or **Mark** → Shauna merges |
 | **Mark** | Identity / user service | `services/identity-service/**`; Config keys in `services/config-server/.../identity-service.yml` only when needed | `feature/mark-identity-auth-skeleton` | PR → **Shauna**; Mark merges when **CI is green** |
 
-The **System Architect** role should not rewrite other teammates’ service internals without review. Shared merge hotspots are governed under [Repository governance](#repository-governance). To reduce merge friction with gateway work, **coordinate `services/api-gateway/.../application.yml`** with whoever owns the gateway task.
+The **System Architect** role should not rewrite other teammates’ service internals without review. To reduce merge friction with gateway work, **coordinate root `pom.xml` and gateway YAML** with whoever owns the gateway task.
 
 ---
 
@@ -50,13 +50,6 @@ The **System Architect** role should not rewrite other teammates’ service inte
 3. Start the stack with **`docker compose up`** (see [Docker Compose](#docker-compose)): **Config Server** → **Eureka** → **Identity**, **Mentorship**, **Event** → **API Gateway** (Compose health checks enforce **Config** and **Eureka** first).
 4. Open **Eureka** at `http://localhost:8761` and confirm instances are **UP**.
 5. Call health and sample routes (see [Verifying the stack](#verifying-the-stack)).
-
----
-
-## Repository governance
-
-- **Root `pom.xml`, `docker-compose.yml`, and `.github/workflows/**`:** only **Noa** changes these unless another teammate is **delegated in writing** (for example email, chat, or a short doc with Noa’s explicit sign-off).
-- **`services/config-server/src/main/resources/config/application.yml`:** only **one person** edits this file **per sprint**; agree the assignee at sprint start so two people do not ship overlapping PRs against it in the same sprint.
 
 ---
 
