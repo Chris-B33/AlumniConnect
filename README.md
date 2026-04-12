@@ -6,13 +6,6 @@ University of Limerick
 
 ---
 
-## Repository governance
-
-- **Root `pom.xml`, `docker-compose.yml`, and `.github/workflows/**`:** only **Noa** changes these unless another teammate is **delegated in writing** (for example email, chat, or a short doc with Noa’s explicit sign-off).
-- **`services/config-server/src/main/resources/config/application.yml`:** only **one person** edits this file **per sprint**; agree the assignee at sprint start so two people do not ship overlapping PRs against it in the same sprint.
-
----
-
 ## Project Overview  
 
 **AlumniConnect** is a distributed, microservices-based web platform designed to facilitate structured engagement between university alumni and current students.
