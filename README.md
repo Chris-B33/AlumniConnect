@@ -192,6 +192,30 @@ After **`docker compose up`**, quick checks:
 - **Actuator (JSON):** `http://localhost:8081/actuator/health`, `8082`, `8083`, `8080` — expect **`"status":"UP"`**.
 - **Through the gateway:** the three example URLs under [API Gateway](#api-gateway) should return **HTTP 200**.
 
+### Identity — register and login (JWT)
+
+`POST /api/auth/register` and `POST /api/auth/login` on **identity-service** accept JSON bodies. Through the gateway, prefix with **`/identity`** (first segment stripped before forwarding).
+
+**Register** (direct to service):
+
+```http
+POST http://localhost:8081/api/auth/register
+Content-Type: application/json
+
+{"email":"student@example.com","password":"password123","role":"Student"}
+```
+
+**Login** (via gateway):
+
+```http
+POST http://localhost:8080/identity/api/auth/login
+Content-Type: application/json
+
+{"email":"student@example.com","password":"password123"}
+```
+
+Responses are JSON: **`accessToken`** (JWT), **`tokenType`** (`Bearer`), **`expiresInSeconds`**. `role` must be **`Student`** or **`Alumni`**. Password must be at least **8** characters. Users are stored **in memory** in this thin slice (restart clears them). Signing material comes from **`identity-service.yml`** on the Config Server (`jwt.secret`, `jwt.expiration-seconds`); do not commit real production secrets.
+
 ---
 
 ## Continuous integration

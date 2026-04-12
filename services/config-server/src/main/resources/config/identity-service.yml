@@ -4,3 +4,9 @@ server:
 app:
   config:
     message: Loaded from Config Server
+
+# JWT signing (never commit real production secrets; override via env/secret store in deployment)
+jwt:
+  # HS256 requires a key material length >= 256 bits; this dev default is intentionally long.
+  secret: "AlumniConnectDevOnlyJwtSigningKey_ChangeMe_UseEnvInProd_0123456789abcdef"
+  expiration-seconds: 28800
