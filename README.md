@@ -6,6 +6,13 @@ University of Limerick
 
 ---
 
+## Repository governance
+
+- **Root `pom.xml`, `docker-compose.yml`, and `.github/workflows/**`:** only **Noa** changes these unless another teammate is **delegated in writing** (for example email, chat, or a short doc with Noa’s explicit sign-off).
+- **`services/config-server/src/main/resources/config/application.yml`:** only **one person** edits this file **per sprint**; agree the assignee at sprint start so two people do not ship overlapping PRs against it in the same sprint.
+
+---
+
 ## Collaboration and Git workflow
 
 This repository is a **team effort**: one person may upload or push snapshots, while **ownership** is shown through **feature branches**, **reviews**, and the [team table](#team-and-service-ownership) below.
@@ -50,13 +57,6 @@ The **System Architect** role should not rewrite other teammates’ service inte
 3. Start the stack with **`docker compose up`** (see [Docker Compose](#docker-compose)): **Config Server** → **Eureka** → **Identity**, **Mentorship**, **Event** → **API Gateway** (Compose health checks enforce **Config** and **Eureka** first).
 4. Open **Eureka** at `http://localhost:8761` and confirm instances are **UP**.
 5. Call health and sample routes (see [Verifying the stack](#verifying-the-stack)).
-
----
-
-## Repository governance
-
-- **Root `pom.xml`, `docker-compose.yml`, and `.github/workflows/**`:** only **Noa** changes these unless another teammate is **delegated in writing** (for example email, chat, or a short doc with Noa’s explicit sign-off).
-- **`services/config-server/src/main/resources/config/application.yml`:** only **one person** edits this file **per sprint**; agree the assignee at sprint start so two people do not ship overlapping PRs against it in the same sprint.
 
 ---
 
