@@ -54,7 +54,7 @@ public class AuthService {
     }
 
     private TokenResponse tokenFor(User user) {
-        String token = jwtService.createAccessToken(user.getEmail(), user.getRole());
+        String token = jwtService.createAccessToken(user.getId(), user.getEmail(), user.getRole());
         return new TokenResponse(token, "Bearer", jwtProperties.expirationSeconds());
     }
 }
