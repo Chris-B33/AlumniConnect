@@ -1,0 +1,128 @@
+# Prerequisites: from repo root run  mvn clean package -DskipTests
+# Then:  docker compose up
+#
+# Eureka clients use the Compose DNS name eureka-server. Healthchecks ensure
+# config and Eureka accept TCP connections before dependent services start.
+#
+# Gateway (host): http://localhost:8080
+#   http://localhost:8080/identity/api/identity/status
+#   http://localhost:8080/mentorship/api/mentorship/check
+#   http://localhost:8080/event/api/ping
+
+name: alumniconnect
+
+services:
+  config-server:
+    image: eclipse-temurin:17-jre
+    working_dir: /app
+    environment:
+      JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
+    volumes:
+      - ./services/config-server/target/config-server-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+    command: ["java", "-jar", "/app/app.jar"]
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8888"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 60s
+
+  eureka-server:
+    image: eclipse-temurin:17-jre
+    depends_on:
+      config-server:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
+      ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
+    volumes:
+      - ./services/eureka-server/target/eureka-server-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+    command: ["java", "-jar", "/app/app.jar"]
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8761"]
+      interval: 5s
+      timeout: 3s
+      retries: 36
+      start_period: 90s
+
+  identity-service:
+    image: eclipse-temurin:17-jre
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
+      ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    volumes:
+      - ./services/identity-service/target/identity-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+    command: ["java", "-jar", "/app/app.jar"]
+    ports:
+      - "8081:8081"
+
+  mentorship-service:
+    image: eclipse-temurin:17-jre
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
+      ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    volumes:
+      - ./services/mentorship-service/target/mentorship-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+    command: ["java", "-jar", "/app/app.jar"]
+    ports:
+      - "8082:8082"
+
+  event-service:
+    image: eclipse-temurin:17-jre
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
+      ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    volumes:
+      - ./services/event-service/target/event-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+    command: ["java", "-jar", "/app/app.jar"]
+    ports:
+      - "8083:8083"
+
+  api-gateway:
+    image: eclipse-temurin:17-jre
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      mentorship-service:
+        condition: service_started
+      event-service:
+        condition: service_started
+    working_dir: /app
+    environment:
+      JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    volumes:
+      - ./services/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+    command: ["java", "-jar", "/app/app.jar"]
+    ports:
+      - "8080:8080"

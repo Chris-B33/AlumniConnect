@@ -118,3 +118,85 @@ Architectural decisions are continuously evaluated against these quality goals.
 
 ---
 
+## Backend services (Maven modules)
+
+| Module | Role | Default port (local / Compose host) |
+|--------|------|--------------------------------------|
+| `services/config-server` | Spring Cloud Config (native repo under `config/`) | **8888** |
+| `services/eureka-server` | Service registry | **8761** |
+| `services/api-gateway` | Spring Cloud Gateway + Eureka client + load balancer | **8080** |
+| `services/identity-service` | Identity API | **8081** |
+| `services/mentorship-service` | Mentorship API (calls identity via `@LoadBalanced` RestTemplate, service id **`identity-service`**) | **8082** |
+| `services/event-service` | Events API | **8083** |
+
+Root **`pom.xml`** is an aggregator: run **`mvn verify`** (or **`mvn clean package`**) from the repository root to build every module.
+
+---
+
+## API Gateway
+
+The **`api-gateway`** service (port **8080**) is the single HTTP entry point for routed traffic to services registered in Eureka.
+
+**Path prefixes** — each downstream app serves **`/api/...`** on its own container port; the gateway uses a **first-path-segment** prefix so identical paths (for example `/api/ping`) do not clash. Routes use **`StripPrefix=1`**, so the first segment (`identity`, `mentorship`, or `event`) is removed before the request is forwarded.
+
+| Prefix on gateway (`http://localhost:8080`) | Target |
+|-----------------------------------------------|--------|
+| `/identity/**` | `lb://identity-service` |
+| `/mentorship/**` | `lb://mentorship-service` |
+| `/event/**` | `lb://event-service` |
+
+**Examples** (with Config, Eureka, backends, and gateway running):
+
+- `http://localhost:8080/identity/api/identity/status`
+- `http://localhost:8080/mentorship/api/mentorship/check`
+- `http://localhost:8080/event/api/ping`
+
+**CORS** is enabled for typical Vite (**`5173`**) and CRA (**`3000`**) dev origins.
+
+---
+
+## Docker Compose
+
+**Prerequisites:** [Docker](https://docs.docker.com/get-docker/) with Compose v2, and fat JARs built from the repo root.
+
+From the repository root:
+
+1. `mvn clean package -DskipTests`
+2. `docker compose up`
+
+Compose project name: **`alumniconnect`**. Images use **`eclipse-temurin:17-jre`**; each service runs **`java -jar`** against the matching **`target/*-0.0.1-SNAPSHOT.jar`** mounted read-only.
+
+| Service | Host port | Notes |
+|---------|-----------|--------|
+| config-server | 8888 | No Eureka registration |
+| eureka-server | 8761 | Dashboard: `http://localhost:8761` |
+| api-gateway | 8080 | Uses Eureka only (config is classpath-based) |
+| identity-service | 8081 | |
+| mentorship-service | 8082 | |
+| event-service | 8083 | |
+
+**Environment (Compose):**
+
+- **`ALUMNI_CONFIG_IMPORT=configserver:http://config-server:8888`** — Config Server URL for **eureka-server**, **identity-service**, **mentorship-service**, and **event-service**. In each service, `application.yml` uses `${ALUMNI_CONFIG_IMPORT:configserver:http://localhost:8888}` so a normal local run still targets **`http://localhost:8888`** when the variable is unset.
+- **`EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/`** — Eureka for all Eureka clients in Compose.
+
+**Healthchecks:** TCP checks on **config-server:8888** and **eureka-server:8761** so dependent containers start only after those ports accept connections.
+
+---
+
+## Verifying the stack
+
+After **`docker compose up`**, quick checks:
+
+- **Eureka:** `http://localhost:8761` — instances for API-GATEWAY, IDENTITY-SERVICE, MENTORSHIP-SERVICE, EVENT-SERVICE should be **UP**.
+- **Actuator (JSON):** `http://localhost:8081/actuator/health`, `8082`, `8083`, `8080` — expect **`"status":"UP"`**.
+- **Through the gateway:** the three example URLs under [API Gateway](#api-gateway) should return **HTTP 200**.
+
+---
+
+## Continuous integration
+
+GitHub Actions workflow **`.github/workflows/ci.yml`** runs **`mvn -B verify`** on pushes and pull requests to **`main`** and **`develop`** (JDK **17**, Temurin, Maven cache enabled).
+
+---
+

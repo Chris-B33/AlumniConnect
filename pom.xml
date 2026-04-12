@@ -14,6 +14,7 @@
     <modules>
         <module>services/config-server</module>
         <module>services/eureka-server</module>
+        <module>services/api-gateway</module>
         <module>services/identity-service</module>
         <module>services/mentorship-service</module>
         <module>services/event-service</module>
