@@ -1,5 +1,15 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: identity-service
   config:
-    import: ${ALUMNI_CONFIG_IMPORT:configserver:http://localhost:8888}
+    # In Docker/CI, ALUMNI_CONFIG_IMPORT=configserver:http://config-server:8888 (required, no optional:).
+    # Locally without a running Config Server, defaults to optional: so the service still starts.
+    import: ${ALUMNI_CONFIG_IMPORT:optional:configserver:http://localhost:8888}
+
+# Dev-only fallback: overridden by Config Server in all deployed environments.
+jwt:
+  secret: "AlumniConnectDevOnlyJwtSigningKey_ChangeMe_UseEnvInProd_0123456789abcdef"
+  expiration-seconds: 28800
