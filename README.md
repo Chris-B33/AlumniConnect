@@ -6,6 +6,53 @@ University of Limerick
 
 ---
 
+## Collaboration and Git workflow
+
+This repository is a **team effort**: one person may upload or push snapshots, while **ownership** is shown through **feature branches**, **reviews**, and the [team table](#team-and-service-ownership) below.
+
+| Branch | Purpose |
+|--------|---------|
+| **`main`** | Stable hand-in line — left quiet during day-to-day work; updated for agreed releases (for example a final **`develop` → `main`** PR with a clear story in the PR body). |
+| **`develop`** | Integration branch (“development”). Feature branches merge here via PR after review. |
+| **Feature branches** | Per-person work (examples: `feature/shauna-readme-architecture`, `feature/mark-identity-auth-skeleton`). Target **`develop`** in PRs, not `main`, unless it is an agreed release. |
+
+Continuous integration (`.github/workflows/ci.yml`) runs on **`main`** and **`develop`**.
+
+---
+
+## Quick links
+
+| Resource | Location |
+|----------|----------|
+| Course wiki | [github.com/Chris-B33/AlumniConnect/wiki](https://github.com/Chris-B33/AlumniConnect/wiki) |
+| GitHub repository | [github.com/Chris-B33/AlumniConnect](https://github.com/Chris-B33/AlumniConnect) |
+| Clone (HTTPS) | `https://github.com/Chris-B33/AlumniConnect.git` |
+| System context diagram (Mermaid) | [docs/system-context.md](docs/system-context.md) |
+
+---
+
+## Team and service ownership
+
+| Teammate | Role (narrative) | Primary repo areas | Example feature branches | Review / merge (from plan) |
+|----------|------------------|--------------------|--------------------------|----------------------------|
+| **Noa** | Coordination / initial integration | Process, framing commits on `main` | _(coordination)_ | As agreed per PR |
+| **Shauna** | System architect and repo lead | Root `README.md`, `docs/`, `adr/` | `feature/shauna-readme-architecture`, `feature/shauna-adrs-wiki` | PR → **Noa** or **Mark** → Shauna merges |
+| **Mark** | Identity / user service | `services/identity-service/**`; Config keys in `services/config-server/.../identity-service.yml` only when needed | `feature/mark-identity-auth-skeleton` | PR → **Shauna**; Mark merges when **CI is green** |
+
+The **System Architect** role should not rewrite other teammates’ service internals without review. To reduce merge friction with gateway work, **coordinate root `pom.xml` and gateway YAML** with whoever owns the gateway task.
+
+---
+
+## First-time run order (about 15 minutes)
+
+1. Install **JDK 17**, **Maven 3.9+**, and **Docker** (Compose v2).
+2. From the repository root, build all modules: `mvn clean package -DskipTests`.
+3. Start the stack with **`docker compose up`** (see [Docker Compose](#docker-compose)): **Config Server** → **Eureka** → **Identity**, **Mentorship**, **Event** → **API Gateway** (Compose health checks enforce **Config** and **Eureka** first).
+4. Open **Eureka** at `http://localhost:8761` and confirm instances are **UP**.
+5. Call health and sample routes (see [Verifying the stack](#verifying-the-stack)).
+
+---
+
 ## Project Overview  
 
 **AlumniConnect** is a distributed, microservices-based web platform designed to facilitate structured engagement between university alumni and current students.
