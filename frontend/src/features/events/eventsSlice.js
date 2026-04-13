@@ -5,7 +5,7 @@ export const fetchEvents = createAsyncThunk(
   'events/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/events');
+      const response = await api.get('/event/api/events');
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message ?? 'Failed to fetch events');
@@ -29,7 +29,7 @@ const eventsSlice = createSlice({
       })
       .addCase(fetchEvents.fulfilled, (state, action) => {
         state.status = 'fulfilled';
-        state.items = action.payload;
+        state.items = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchEvents.rejected, (state, action) => {
         state.status = 'rejected';

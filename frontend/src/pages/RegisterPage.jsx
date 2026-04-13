@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser, selectAuth } from '../features/auth/authSlice';
+import { registerUser, selectAuth } from '../features/auth/authSlice';
 import styles from './LoginPage.module.css';
 
-function LoginPage() {
+function RegisterPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { status, error } = useSelector(selectAuth);
 
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '', role: 'Student' });
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -17,16 +17,14 @@ function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await dispatch(loginUser(form));
-    if (loginUser.fulfilled.match(result)) {
+    const result = await dispatch(registerUser(form));
+    if (registerUser.fulfilled.match(result)) {
       navigate('/');
     }
   };
 
   return (
     <main className={styles.page}>
-
-      {/* Crossfading campus background — drop images in frontend/public/ */}
       <div className={styles.slideshow} aria-hidden="true">
         <div className={styles.slide} />
         <div className={styles.slide} />
@@ -61,24 +59,38 @@ function LoginPage() {
               name="password"
               value={form.password}
               onChange={handleChange}
-              placeholder="••••••••"
+              placeholder="Min. 8 characters"
+              minLength={8}
               required
             />
           </div>
 
+          <div className={styles.field}>
+            <label htmlFor="role">I am a</label>
+            <select
+              id="role"
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+            >
+              <option value="Student">Student</option>
+              <option value="Alumni">Alumni</option>
+            </select>
+          </div>
+
           <button className={styles.submit} type="submit" disabled={status === 'pending'}>
-            {status === 'pending' ? 'Signing in…' : 'Sign In'}
+            {status === 'pending' ? 'Creating account…' : 'Create Account'}
           </button>
 
           {error && <p className={styles.error} role="alert">{error}</p>}
         </form>
 
         <p className={styles.switchLink}>
-          No account? <Link to="/register">Create one</Link>
+          Already have an account? <Link to="/login">Sign in</Link>
         </p>
       </div>
     </main>
   );
 }
 
-export default LoginPage;
+export default RegisterPage;
