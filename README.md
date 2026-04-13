@@ -198,7 +198,7 @@ The **`api-gateway`** service (port **8080**) is the single HTTP entry point for
 - `http://localhost:8080/mentorship/api/mentorship/check`
 - `http://localhost:8080/event/api/ping`
 
-**CORS** is enabled for typical Vite (**`5173`**) and CRA (**`3000`**) dev origins.
+**CORS** (global on the gateway for **`[/**]`**): allows **`http://localhost:5173`**, **`http://localhost:3000`**, and the same ports on **`127.0.0.1`**; methods **GET–PATCH, OPTIONS**; headers **`Authorization`**, **`Content-Type`**, **`Accept`**; **`allowCredentials: true`**; preflight **`maxAge` 3600s**. Extend `application.yml` if the team adds another dev origin (for example HTTPS or a different port).
 
 ---
 
