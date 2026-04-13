@@ -14,7 +14,7 @@ This repository is a **team effort**: one person may upload or push snapshots, w
 |--------|---------|
 | **`main`** | Stable hand-in line — left quiet during day-to-day work; updated for agreed releases (for example a final **`develop` → `main`** PR with a clear story in the PR body). |
 | **`develop`** | Integration branch (“development”). Feature branches merge here via PR after review. |
-| **Feature branches** | Per-person work (examples: `feature/shauna-readme-architecture`, `feature/mark-identity-auth-skeleton`). Target **`develop`** in PRs, not `main`, unless it is an agreed release. |
+| **Feature branches** | Per-person work. Target **`develop`** in PRs, not `main`, unless it is an agreed release. |
 
 Continuous integration (`.github/workflows/ci.yml`) runs on **`main`** and **`develop`**.
 
@@ -33,13 +33,13 @@ Continuous integration (`.github/workflows/ci.yml`) runs on **`main`** and **`de
 
 ## Team and service ownership
 
-| Teammate | Role (narrative) | Primary repo areas | Example feature branches | Review / merge (from plan) |
-|----------|------------------|--------------------|--------------------------|----------------------------|
-| **Noa** | Coordination / initial integration | Process, framing commits on `main` | _(coordination)_ | As agreed per PR |
-| **Shauna** | System architect and repo lead | Root `README.md`, `docs/`, `adr/` | `feature/shauna-readme-architecture`, `feature/shauna-adrs-wiki` | PR → **Noa** or **Mark** → Shauna merges |
-| **Mark** | Identity / user service | `services/identity-service/**`; Config keys in `services/config-server/.../identity-service.yml` only when needed | `feature/mark-identity-auth-skeleton` | PR → **Shauna**; Mark merges when **CI is green** |
-
-The **System Architect** role should not rewrite other teammates’ service internals without review. To reduce merge friction with gateway work, **coordinate root `pom.xml` and gateway YAML** with whoever owns the gateway task.
+| Teammate | Role (narrative) | Review / merge (from plan) |
+|----------|------------------|----------------------------|
+| **Noa Car** | DevOps and integration lead - gateway routing, API docs (Springdoc/Swagger), CORS, environments; coordination on `main` (`api-gateway`, Config Server Spring app, `docker-compose.yml`, workflows, root `pom.xml`) | As agreed per PR |
+| **Shauna Kearney** | System architect and repository lead - structure, decomposition, API contracts, quality attributes; root `README.md`, `docs/`, `adr/` | PR → **Noa** or **Mark** → Shauna merges |
+| **Mark Hughes** | Backend core service lead - authentication and user management (`identity-service`, `identity-service.yml` in Config Server when needed) | PR → **Shauna**; Mark merges when **CI is green** |
+| **Christopher Brophy** | Frontend lead - modular UI, protected routes, Redux, async request lifecycle (`frontend/`) | PR to `develop` |
+| **Michael McCarthy** | Backend domain services lead - mentorship and event bounded contexts (`mentorship-service`, `event-service`, related Config Server YAML) | PR to `develop` |
 
 ---
 
@@ -198,7 +198,7 @@ The **`api-gateway`** service (port **8080**) is the single HTTP entry point for
 - `http://localhost:8080/mentorship/api/mentorship/check`
 - `http://localhost:8080/event/api/ping`
 
-**CORS** is enabled for typical Vite (**`5173`**) and CRA (**`3000`**) dev origins.
+**CORS** (global on the gateway for **`[/**]`**): allows **`http://localhost:5173`**, **`http://localhost:3000`**, and the same ports on **`127.0.0.1`**; methods **GET–PATCH, OPTIONS**; headers **`Authorization`**, **`Content-Type`**, **`Accept`**; **`allowCredentials: true`**; preflight **`maxAge` 3600s**. Extend `application.yml` if the team adds another dev origin (for example HTTPS or a different port).
 
 ---
 
