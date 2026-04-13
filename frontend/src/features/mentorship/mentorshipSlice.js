@@ -5,7 +5,7 @@ export const fetchMentorships = createAsyncThunk(
   'mentorship/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/mentorships');
+      const response = await api.get('/mentorship/api/mentorships');
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message ?? 'Failed to fetch mentorships');
@@ -29,7 +29,7 @@ const mentorshipSlice = createSlice({
       })
       .addCase(fetchMentorships.fulfilled, (state, action) => {
         state.status = 'fulfilled';
-        state.items = action.payload;
+        state.items = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchMentorships.rejected, (state, action) => {
         state.status = 'rejected';
