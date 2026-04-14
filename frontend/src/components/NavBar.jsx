@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 import { logout, selectAuth } from '../features/auth/authSlice';
+import { FEATURES } from '../utils/features';
 import styles from './NavBar.module.css';
 
 function NavBar() {
@@ -17,6 +18,20 @@ function NavBar() {
       </div>
 
       <ul className={styles.links}>
+        {FEATURES.profile && (
+          <li>
+            <NavLink to="/profile" className={({ isActive }) => isActive ? styles.active : undefined}>
+              Profile
+            </NavLink>
+          </li>
+        )}
+        {FEATURES.chat && (
+          <li>
+            <NavLink to="/chat" className={({ isActive }) => isActive ? styles.active : undefined}>
+              Chat
+            </NavLink>
+          </li>
+        )}
         <li>
           <NavLink to="/" end className={({ isActive }) => isActive ? styles.active : undefined}>
             Dashboard

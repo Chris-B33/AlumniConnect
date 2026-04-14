@@ -1,11 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
+// SEARCH CONTRACT: query string is sent as ?q=<term>
+// Confirm param name with whoever owns the mentorship-service search endpoint.
+// e.g. GET /mentorship/api/mentorships?q=software
 export const fetchMentorships = createAsyncThunk(
   'mentorship/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async (query = '', { rejectWithValue }) => {
     try {
-      const response = await api.get('/mentorship/api/mentorships');
+      const params = query ? { q: query } : {};
+      const response = await api.get('/mentorship/api/mentorships', { params });
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message ?? 'Failed to fetch mentorships');

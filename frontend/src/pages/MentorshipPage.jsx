@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMentorships, selectMentorship } from '../features/mentorship/mentorshipSlice';
+import { useDebounce } from '../hooks/useDebounce';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import styles from './ServicePage.module.css';
@@ -9,9 +10,12 @@ function MentorshipPage() {
   const dispatch = useDispatch();
   const { items, status, error } = useSelector(selectMentorship);
 
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+
   useEffect(() => {
-    dispatch(fetchMentorships());
-  }, [dispatch]);
+    dispatch(fetchMentorships(debouncedSearch));
+  }, [dispatch, debouncedSearch]);
 
   return (
     <>
@@ -23,11 +27,20 @@ function MentorshipPage() {
             <p className={styles.subtitle}>Connect with alumni mentors and mentees</p>
           </div>
           {status === 'rejected' && (
-            <button className={styles.retryBtn} onClick={() => dispatch(fetchMentorships())}>
+            <button className={styles.retryBtn} onClick={() => dispatch(fetchMentorships(debouncedSearch))}>
               Retry
             </button>
           )}
         </div>
+
+        <input
+          className={styles.searchInput}
+          type="search"
+          placeholder="Search mentors…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search mentorships"
+        />
 
         {(status === 'idle' || status === 'pending') && (
           <div className={styles.loadingRows}>
@@ -47,8 +60,10 @@ function MentorshipPage() {
         {status === 'fulfilled' && items.length === 0 && (
           <div className={styles.emptyState}>
             <span className={styles.emptyIcon}>🤝</span>
-            <p>No mentorships found.</p>
-            <span className={styles.emptyHint}>Mentorship connections will appear here once available.</span>
+            <p>{search ? `No mentors found for "${search}"` : 'No mentorships found.'}</p>
+            <span className={styles.emptyHint}>
+              {search ? 'Try a different search term.' : 'Mentorship connections will appear here once available.'}
+            </span>
           </div>
         )}
 
@@ -60,13 +75,9 @@ function MentorshipPage() {
                   {m.mentorName ?? m.mentor ?? 'Mentor'}
                 </h2>
                 {(m.menteeName ?? m.mentee) && (
-                  <p className={styles.cardMeta}>
-                    Mentee: {m.menteeName ?? m.mentee}
-                  </p>
+                  <p className={styles.cardMeta}>Mentee: {m.menteeName ?? m.mentee}</p>
                 )}
-                {m.status && (
-                  <span className={styles.badge}>{m.status}</span>
-                )}
+                {m.status && <span className={styles.badge}>{m.status}</span>}
               </li>
             ))}
           </ul>
