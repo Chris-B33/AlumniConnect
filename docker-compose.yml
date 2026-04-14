@@ -1,6 +1,8 @@
 # Prerequisites: from repo root run  mvn clean package -DskipTests
 # Then:  docker compose up
 #
+# Optional data stack (Postgres, Redis, MinIO) — does NOT start by default so
+#
 # Eureka clients use the Compose DNS name eureka-server. Healthchecks ensure
 # config and Eureka accept TCP connections before dependent services start.
 #
@@ -126,3 +128,61 @@ services:
     command: ["java", "-jar", "/app/app.jar"]
     ports:
       - "8080:8080"
+
+  # --- Optional profile `platform`: not started unless you pass --profile platform ---
+  postgres:
+    profiles:
+      - platform
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-alumni}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-alumni_dev_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-alumni_connect}
+    volumes:
+      - alumniconnect-postgres-data:/var/lib/postgresql/data
+      - ./docker/platform/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
+  redis:
+    profiles:
+      - platform
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  minio:
+    profiles:
+      - platform
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - alumniconnect-minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/minio/health/live || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+
+volumes:
+  alumniconnect-postgres-data:
+  alumniconnect-minio-data:

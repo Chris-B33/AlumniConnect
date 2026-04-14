@@ -80,6 +80,7 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+compose.platform.env
 
 ########################################
 # DOCKER
