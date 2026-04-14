@@ -10,3 +10,9 @@ jwt:
   # HS256 requires a key material length >= 256 bits; this dev default is intentionally long.
   secret: "AlumniConnectDevOnlyJwtSigningKey_ChangeMe_UseEnvInProd_0123456789abcdef"
   expiration-seconds: 28800
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    config-url: /identity/v3/api-docs/swagger-config
+    url: /identity/v3/api-docs
