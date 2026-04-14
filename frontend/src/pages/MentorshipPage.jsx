@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMentorships, selectMentorship } from '../features/mentorship/mentorshipSlice';
 import NavBar from '../components/NavBar';
+import Footer from '../components/Footer';
 import styles from './ServicePage.module.css';
 
 function MentorshipPage() {
@@ -17,12 +18,23 @@ function MentorshipPage() {
       <NavBar />
       <main className={styles.page}>
         <div className={styles.header}>
-          <h1>Mentorship</h1>
-          <p className={styles.subtitle}>Connect with alumni mentors and mentees</p>
+          <div>
+            <h1>Mentorship</h1>
+            <p className={styles.subtitle}>Connect with alumni mentors and mentees</p>
+          </div>
+          {status === 'rejected' && (
+            <button className={styles.retryBtn} onClick={() => dispatch(fetchMentorships())}>
+              Retry
+            </button>
+          )}
         </div>
 
-        {status === 'pending' && (
-          <p className={styles.loading}>Loading mentorships…</p>
+        {(status === 'idle' || status === 'pending') && (
+          <div className={styles.loadingRows}>
+            <div className={styles.skeletonRow} />
+            <div className={styles.skeletonRow} />
+            <div className={styles.skeletonRow} />
+          </div>
         )}
 
         {status === 'rejected' && (
@@ -33,7 +45,11 @@ function MentorshipPage() {
         )}
 
         {status === 'fulfilled' && items.length === 0 && (
-          <p className={styles.empty}>No mentorships found.</p>
+          <div className={styles.emptyState}>
+            <span className={styles.emptyIcon}>🤝</span>
+            <p>No mentorships found.</p>
+            <span className={styles.emptyHint}>Mentorship connections will appear here once available.</span>
+          </div>
         )}
 
         {status === 'fulfilled' && items.length > 0 && (
@@ -56,6 +72,7 @@ function MentorshipPage() {
           </ul>
         )}
       </main>
+      <Footer />
     </>
   );
 }

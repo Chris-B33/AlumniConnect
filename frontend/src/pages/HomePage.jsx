@@ -1,15 +1,24 @@
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectAuth } from '../features/auth/authSlice';
 import NavBar from '../components/NavBar';
+import Footer from '../components/Footer';
 import styles from './HomePage.module.css';
 
 function HomePage() {
+  const { user } = useSelector(selectAuth);
+
+  const greeting = user?.role === 'ALUMNI' ? 'Welcome back, Alumni' : user?.role === 'STUDENT' ? 'Welcome, Student' : 'Welcome';
+  const subtext = user?.email ?? 'University of Limerick';
+
   return (
     <>
       <NavBar />
       <main className={styles.page}>
         <div className={styles.hero}>
-          <h1>Welcome to AlumniConnect</h1>
-          <p>University of Limerick — connecting students and alumni</p>
+          <p className={styles.heroLabel}>AlumniConnect</p>
+          <h1>{greeting}</h1>
+          <p className={styles.heroSub}>{subtext}</p>
         </div>
 
         <div className={styles.cards}>
@@ -26,6 +35,7 @@ function HomePage() {
           </Link>
         </div>
       </main>
+      <Footer />
     </>
   );
 }
