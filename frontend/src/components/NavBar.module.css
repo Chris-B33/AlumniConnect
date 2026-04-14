@@ -1,7 +1,7 @@
 .nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 1.5rem;
   padding: 0 1.5rem;
   height: 56px;
   background: #00693E;
@@ -14,7 +14,6 @@
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  margin-right: auto;
 }
 
 .logo {
@@ -69,6 +68,7 @@
 .right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.875rem;
 }
 

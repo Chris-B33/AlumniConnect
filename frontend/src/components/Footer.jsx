@@ -24,8 +24,6 @@ function Footer() {
           <strong style={styles.colHeading}>Quick Links</strong>
           <ul style={styles.list}>
             <li><a href="https://www.ul.ie" style={styles.link} target="_blank" rel="noreferrer">UL Homepage</a></li>
-            <li><a href="https://www.ul.ie/alumni" style={styles.link} target="_blank" rel="noreferrer">Alumni Office</a></li>
-            <li><a href="https://www.ul.ie/careers" style={styles.link} target="_blank" rel="noreferrer">Careers</a></li>
             <li><a href="https://www.ul.ie/about/contact-us" style={styles.link} target="_blank" rel="noreferrer">Contact Us</a></li>
           </ul>
         </div>
