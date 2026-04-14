@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.alumniconnect.identityservice.service.JwtService;
 
@@ -43,11 +44,17 @@ public class SecurityConfig {
                                 "/api/ping",
                                 "/api/identity/status",
                                 "/api/config",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
                                 "/actuator/**",
                                 "/error")
+                        .permitAll()
+                        // Ant matchers: Spring MVC-style string patterns can miss Springdoc routes and
+                        // incorrectly fall through to authenticated() → 401 on Swagger and /v3/api-docs.
+                        .requestMatchers(
+                                new AntPathRequestMatcher("/v3/api-docs"),
+                                new AntPathRequestMatcher("/v3/api-docs/**"),
+                                new AntPathRequestMatcher("/swagger-ui.html"),
+                                new AntPathRequestMatcher("/swagger-ui/**"),
+                                new AntPathRequestMatcher("/webjars/**"))
                         .permitAll()
                         .anyRequest()
                         .authenticated());
