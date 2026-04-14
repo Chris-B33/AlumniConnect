@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchEvents, selectEvents } from '../features/events/eventsSlice';
 import NavBar from '../components/NavBar';
+import Footer from '../components/Footer';
 import styles from './ServicePage.module.css';
 
 function EventsPage() {
@@ -17,12 +18,23 @@ function EventsPage() {
       <NavBar />
       <main className={styles.page}>
         <div className={styles.header}>
-          <h1>Events</h1>
-          <p className={styles.subtitle}>Upcoming alumni and university events</p>
+          <div>
+            <h1>Events</h1>
+            <p className={styles.subtitle}>Upcoming alumni and university events</p>
+          </div>
+          {status === 'rejected' && (
+            <button className={styles.retryBtn} onClick={() => dispatch(fetchEvents())}>
+              Retry
+            </button>
+          )}
         </div>
 
-        {status === 'pending' && (
-          <p className={styles.loading}>Loading events…</p>
+        {(status === 'idle' || status === 'pending') && (
+          <div className={styles.loadingRows}>
+            <div className={styles.skeletonRow} />
+            <div className={styles.skeletonRow} />
+            <div className={styles.skeletonRow} />
+          </div>
         )}
 
         {status === 'rejected' && (
@@ -33,7 +45,11 @@ function EventsPage() {
         )}
 
         {status === 'fulfilled' && items.length === 0 && (
-          <p className={styles.empty}>No events found.</p>
+          <div className={styles.emptyState}>
+            <span className={styles.emptyIcon}>📅</span>
+            <p>No events found.</p>
+            <span className={styles.emptyHint}>Check back soon — events will appear here when published.</span>
+          </div>
         )}
 
         {status === 'fulfilled' && items.length > 0 && (
@@ -48,6 +64,7 @@ function EventsPage() {
           </ul>
         )}
       </main>
+      <Footer />
     </>
   );
 }

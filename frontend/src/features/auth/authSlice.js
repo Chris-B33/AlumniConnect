@@ -1,5 +1,18 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
+import { parseJwt } from '../../utils/parseJwt';
+
+function userFromToken(token) {
+  if (!token) return null;
+  const claims = parseJwt(token);
+  if (!claims) return null;
+  return {
+    email: claims.sub,
+    role: claims.role, // "STUDENT" | "ALUMNI"
+  };
+}
+
+const storedToken = localStorage.getItem('token') ?? null;
 
 export const loginUser = createAsyncThunk(
   'auth/login',
@@ -30,8 +43,8 @@ export const registerUser = createAsyncThunk(
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    user: null,
-    token: localStorage.getItem('token') ?? null,
+    user: userFromToken(storedToken),
+    token: storedToken,
     status: 'idle', // idle | pending | fulfilled | rejected
     error: null,
   },
@@ -53,6 +66,7 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.status = 'fulfilled';
         state.token = action.payload.accessToken;
+        state.user = userFromToken(action.payload.accessToken);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = 'rejected';
@@ -65,6 +79,7 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.status = 'fulfilled';
         state.token = action.payload.accessToken;
+        state.user = userFromToken(action.payload.accessToken);
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = 'rejected';
