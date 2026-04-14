@@ -43,6 +43,9 @@ public class SecurityConfig {
                                 "/api/ping",
                                 "/api/identity/status",
                                 "/api/config",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
                                 "/actuator/**",
                                 "/error")
                         .permitAll()

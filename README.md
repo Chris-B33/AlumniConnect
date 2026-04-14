@@ -126,9 +126,11 @@ The frontend follows a modular component-based architecture:
 - Protected routes
 - Axios interceptors for 401 handling
 - Role-based route control
-- Environment variable configuration
+- Environment variable configuration (`VITE_API_BASE_URL`; optional locally — defaults to the API Gateway at `http://localhost:8080`)
 
 The structure supports maintainability, scalability, and clean separation of responsibilities.
+
+**Run the UI:** from `frontend/`, run `npm install` then `npm run dev` (Vite uses port **3000** per `vite.config.js`). No `.env` file is required for local development against Docker Compose on the same machine.
 
 ---
 
@@ -197,6 +199,12 @@ The **`api-gateway`** service (port **8080**) is the single HTTP entry point for
 - `http://localhost:8080/identity/api/identity/status`
 - `http://localhost:8080/mentorship/api/mentorship/check`
 - `http://localhost:8080/event/api/ping`
+
+**OpenAPI/Swagger** (domain services):
+
+- Identity: `http://localhost:8080/identity/swagger-ui/index.html` and `http://localhost:8080/identity/v3/api-docs`
+- Mentorship: `http://localhost:8080/mentorship/swagger-ui/index.html` and `http://localhost:8080/mentorship/v3/api-docs`
+- Event: `http://localhost:8080/event/swagger-ui/index.html` and `http://localhost:8080/event/v3/api-docs`
 
 **CORS** (global on the gateway for **`[/**]`**): allows **`http://localhost:5173`**, **`http://localhost:3000`**, and the same ports on **`127.0.0.1`**; methods **GET–PATCH, OPTIONS**; headers **`Authorization`**, **`Content-Type`**, **`Accept`**; **`allowCredentials: true`**; preflight **`maxAge` 3600s**. Extend `application.yml` if the team adds another dev origin (for example HTTPS or a different port).
 
