@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchEvents, selectEvents } from '../features/events/eventsSlice';
+import { useDebounce } from '../hooks/useDebounce';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import styles from './ServicePage.module.css';
@@ -9,9 +10,12 @@ function EventsPage() {
   const dispatch = useDispatch();
   const { items, status, error } = useSelector(selectEvents);
 
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+
   useEffect(() => {
-    dispatch(fetchEvents());
-  }, [dispatch]);
+    dispatch(fetchEvents(debouncedSearch));
+  }, [dispatch, debouncedSearch]);
 
   return (
     <>
@@ -23,11 +27,20 @@ function EventsPage() {
             <p className={styles.subtitle}>Upcoming alumni and university events</p>
           </div>
           {status === 'rejected' && (
-            <button className={styles.retryBtn} onClick={() => dispatch(fetchEvents())}>
+            <button className={styles.retryBtn} onClick={() => dispatch(fetchEvents(debouncedSearch))}>
               Retry
             </button>
           )}
         </div>
+
+        <input
+          className={styles.searchInput}
+          type="search"
+          placeholder="Search events…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search events"
+        />
 
         {(status === 'idle' || status === 'pending') && (
           <div className={styles.loadingRows}>
@@ -47,8 +60,10 @@ function EventsPage() {
         {status === 'fulfilled' && items.length === 0 && (
           <div className={styles.emptyState}>
             <span className={styles.emptyIcon}>📅</span>
-            <p>No events found.</p>
-            <span className={styles.emptyHint}>Check back soon — events will appear here when published.</span>
+            <p>{search ? `No events found for "${search}"` : 'No events found.'}</p>
+            <span className={styles.emptyHint}>
+              {search ? 'Try a different search term.' : 'Check back soon — events will appear here when published.'}
+            </span>
           </div>
         )}
 
