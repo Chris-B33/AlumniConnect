@@ -126,9 +126,11 @@ The frontend follows a modular component-based architecture:
 - Protected routes
 - Axios interceptors for 401 handling
 - Role-based route control
-- Environment variable configuration
+- Environment variable configuration (`VITE_API_BASE_URL`; optional locally — defaults to the API Gateway at `http://localhost:8080`)
 
 The structure supports maintainability, scalability, and clean separation of responsibilities.
+
+**Run the UI:** from `frontend/`, run `npm install` then `npm run dev` (Vite uses port **3000** per `vite.config.js`). No `.env` file is required for local development against Docker Compose on the same machine.
 
 ---
 
