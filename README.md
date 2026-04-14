@@ -126,11 +126,11 @@ The frontend follows a modular component-based architecture:
 - Protected routes
 - Axios interceptors for 401 handling
 - Role-based route control
-- Environment variable configuration (`VITE_API_BASE_URL`; optional locally — defaults to the API Gateway at `http://localhost:8080`)
+- Environment variable configuration (`VITE_API_BASE_URL`; optional locally - defaults to the API Gateway at `http://localhost:8080`)
 
 The structure supports maintainability, scalability, and clean separation of responsibilities.
 
-**Run the UI:** from `frontend/`, run `npm install` then `npm run dev` (Vite uses port **3000** per `vite.config.js`). No `.env` file is required for local development against Docker Compose on the same machine.
+**Run the UI:** from `frontend/`, run `npm install` then `npm run dev` (Vite uses port **3000** per `vite.config.js`).
 
 ---
 
@@ -219,6 +219,14 @@ From the repository root:
 1. `mvn clean package -DskipTests`
 2. `docker compose up`
 
+**Optional data stack (Postgres, Redis, MinIO)** — for persistence, search, uploads, or chat work **without** changing the default stack. Teammates who do not pass the profile see **no** extra containers and **no** behaviour change.
+
+```bash
+docker compose --profile platform up
+```
+
+See **[docs/platform.md](docs/platform.md)** for ports, JDBC hints, and who owns the next integration steps. Optional env overrides: copy **`compose.platform.env.example`** to **`compose.platform.env`** (gitignored) and run `docker compose --env-file compose.platform.env --profile platform up`.
+
 Compose project name: **`alumniconnect`**. Images use **`eclipse-temurin:17-jre`**; each service runs **`java -jar`** against the matching **`target/*-0.0.1-SNAPSHOT.jar`** mounted read-only.
 
 | Service | Host port | Notes |
@@ -229,6 +237,9 @@ Compose project name: **`alumniconnect`**. Images use **`eclipse-temurin:17-jre`
 | identity-service | 8081 | |
 | mentorship-service | 8082 | |
 | event-service | 8083 | |
+| postgres | 5432 | **Profile `platform` only** — PostgreSQL 16; init scripts under `docker/platform/postgres/init/`. |
+| redis | 6379 | **Profile `platform` only** — Redis 7. |
+| minio | 9000 (S3 API), 9001 (console) | **Profile `platform` only** — S3-compatible storage for future uploads. |
 
 **Environment (Compose):**
 
