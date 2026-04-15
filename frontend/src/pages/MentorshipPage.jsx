@@ -5,6 +5,8 @@ import {
   requestMentorship,
   acceptMentorship,
   declineMentorship,
+  fetchMentorAvailability,
+  updateMentorAvailability,
   selectMentorship,
 } from '../features/mentorship/mentorshipSlice';
 import { selectAuth } from '../features/auth/authSlice';
@@ -106,7 +108,17 @@ function StatusBadge({ status }) {
 
 function MentorshipPage() {
   const dispatch = useDispatch();
-  const { items, status, error, actionStatus, actionError } = useSelector(selectMentorship);
+  const {
+    items,
+    status,
+    error,
+    actionStatus,
+    actionError,
+    mentorAvailable,
+    availabilityStatus,
+    availabilityError,
+    availabilityActionStatus,
+  } = useSelector(selectMentorship);
   const { user } = useSelector(selectAuth);
 
   const [search, setSearch] = useState('');
@@ -121,6 +133,12 @@ function MentorshipPage() {
       role: user?.role ?? '',
     }));
   }, [dispatch, debouncedSearch, user]);
+
+  useEffect(() => {
+    if (isAlumni && user) {
+      dispatch(fetchMentorAvailability());
+    }
+  }, [dispatch, isAlumni, user]);
 
   const handleRequest = (mentorEmail) => {
     dispatch(requestMentorship({ mentorEmail, studentEmail: user?.email }));
@@ -149,6 +167,34 @@ function MentorshipPage() {
             </button>
           )}
         </div>
+
+        {isAlumni && (
+          <div className={styles.alumniAvailability}>
+            <label className={styles.availabilityLabel}>
+              <input
+                type="checkbox"
+                className={styles.availabilityCheckbox}
+                checked={mentorAvailable === true}
+                disabled={
+                  availabilityStatus === 'pending'
+                  || availabilityActionStatus === 'pending'
+                }
+                onChange={(e) => dispatch(updateMentorAvailability(e.target.checked))}
+              />
+              <span>
+                <strong>Available for mentorship</strong>
+                <span className={styles.availabilityHint}>
+                  {' '}
+                  — When checked, students can find you and send a request. Uncheck to hide from the mentor list
+                  (existing requests stay below).
+                </span>
+              </span>
+            </label>
+            {(availabilityStatus === 'rejected' || availabilityActionStatus === 'rejected') && availabilityError && (
+              <p className={styles.availabilityWarn} role="alert">{availabilityError}</p>
+            )}
+          </div>
+        )}
 
         <input
           className={styles.searchInput}
@@ -186,7 +232,11 @@ function MentorshipPage() {
             <span className={styles.emptyIcon}>🤝</span>
             <p>{search ? `No results for "${search}"` : isAlumni ? 'No requests yet.' : 'No mentors available.'}</p>
             <span className={styles.emptyHint}>
-              {search ? 'Try a different search term.' : isAlumni ? 'Requests from students will appear here.' : 'Check back later.'}
+              {search
+                ? 'Try a different search term.'
+                : isAlumni
+                  ? 'Requests from students will appear here.'
+                  : 'Alumni must opt in under “Available for mentorship” before they appear here.'}
             </span>
           </div>
         )}

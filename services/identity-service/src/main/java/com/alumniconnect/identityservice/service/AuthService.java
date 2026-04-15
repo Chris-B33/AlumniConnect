@@ -1,5 +1,7 @@
 package com.alumniconnect.identityservice.service;
 
+import java.util.Locale;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,7 +35,7 @@ public class AuthService {
     }
 
     public TokenResponse register(RegisterRequest request) {
-        String email = request.email().trim();
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
         if (users.existsByEmailIgnoreCase(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
@@ -44,7 +46,7 @@ public class AuthService {
     }
 
     public TokenResponse login(LoginRequest request) {
-        String email = request.email().trim();
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
         User user = users.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {

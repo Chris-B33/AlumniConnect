@@ -1,65 +1,61 @@
 package com.alumniconnect.eventservice.controller;
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
+import java.util.List;
+import java.util.Map;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.alumniconnect.eventservice.domain.EventRecord;
+import com.alumniconnect.eventservice.service.EventAppService;
 
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
 
-    record Event(long id, String title, String date, String description) {}
+    private final EventAppService events;
 
-    private final Map<Long, Event> events = new ConcurrentHashMap<>();
-    private final AtomicLong counter = new AtomicLong(1);
-
-    public EventController() {
-        seed(new Event(counter.getAndIncrement(), "Alumni Networking Night", "2025-06-10", "Meet fellow alumni and expand your professional network."));
-        seed(new Event(counter.getAndIncrement(), "UL Career Fair 2025", "2025-07-15", "Connect with employers and explore career opportunities."));
-        seed(new Event(counter.getAndIncrement(), "Graduation Ceremony 2025", "2025-08-01", "Celebrate the class of 2025 at the annual graduation ceremony."));
-    }
-
-    private void seed(Event e) {
-        events.put(e.id(), e);
+    public EventController(EventAppService events) {
+        this.events = events;
     }
 
     @GetMapping
-    public ResponseEntity<List<Event>> listEvents(@RequestParam(value = "q", defaultValue = "") String q) {
-        List<Event> result = events.values().stream()
-                .filter(e -> q.isBlank() || e.title().toLowerCase().contains(q.toLowerCase()))
-                .sorted(Comparator.comparingLong(Event::id))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(result);
+    public ResponseEntity<List<EventRecord>> listEvents(@RequestParam(value = "q", defaultValue = "") String q) {
+        return ResponseEntity.ok(events.list(q));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getEvent(@PathVariable Long id) {
-        Event event = events.get(id);
-        if (event == null) return ResponseEntity.notFound().build();
+    public ResponseEntity<EventRecord> getEvent(@PathVariable Long id) {
+        EventRecord event = events.get(id);
+        if (event == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(event);
     }
 
     @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Map<String, String> body) {
-        long id = counter.getAndIncrement();
-        Event event = new Event(id,
-                body.getOrDefault("title", "Untitled Event"),
+    public ResponseEntity<EventRecord> createEvent(@RequestBody Map<String, String> body) {
+        EventRecord event = events.create(
+                body.get("title"),
                 body.get("date"),
                 body.get("description"));
-        events.put(id, event);
         return ResponseEntity.status(201).body(event);
     }
 
     @PostMapping("/{id}/register")
-    public ResponseEntity<Map<String, Object>> registerForEvent(@PathVariable Long id) {
-        if (!events.containsKey(id)) return ResponseEntity.notFound().build();
-        Map<String, Object> response = new HashMap<>();
-        response.put("eventId", id);
-        response.put("status", "REGISTERED");
+    public ResponseEntity<Map<String, Object>> registerForEvent(
+            @PathVariable Long id,
+            @RequestParam(value = "email", required = false) String email) {
+        Map<String, Object> response = events.register(id, email);
+        if (response == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(response);
     }
 }

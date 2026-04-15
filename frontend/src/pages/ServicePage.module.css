@@ -297,3 +297,40 @@
 
 .declineBtn:hover:not(:disabled) { background: #fef2f2; }
 .declineBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.alumniAvailability {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.125rem;
+  border: 1.5px solid #c8ddd3;
+  border-radius: 10px;
+  background: #f8faf9;
+}
+
+.availabilityLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: #111827;
+  line-height: 1.45;
+}
+
+.availabilityCheckbox {
+  margin-top: 0.2rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: #00693E;
+  flex-shrink: 0;
+}
+
+.availabilityHint {
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.availabilityWarn {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: #b45309;
+}

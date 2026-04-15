@@ -1,5 +1,23 @@
+server:
+  port: 8083
+
 spring:
   application:
     name: event-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:event;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  flyway:
+    table: flyway_schema_history_event
+    schemas: event
+    default-schema: event
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: event
   config:
     import: ${ALUMNI_CONFIG_IMPORT:configserver:http://localhost:8888}

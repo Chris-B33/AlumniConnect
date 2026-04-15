@@ -1,6 +1,22 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
+/** Prefer server JSON { message } (and Spring defaults) for Redux error text. */
+function apiErrorMessage(err, fallback) {
+  const d = err.response?.data;
+  if (typeof d === 'string' && d.trim()) return d.trim();
+  if (d && typeof d.message === 'string' && d.message.trim()) return d.message.trim();
+  if (d && typeof d.error === 'string' && d.error.trim()) return d.error.trim();
+  const status = err.response?.status;
+  if (status === 502 || status === 503 || status === 504) {
+    return 'A backend service is unavailable. Ensure Docker Compose is running and Eureka shows all services UP.';
+  }
+  if (status === 403) {
+    return 'You are not allowed to perform this action.';
+  }
+  return fallback;
+}
+
 export const fetchMentorships = createAsyncThunk(
   'mentorship/fetchAll',
   async ({ query = '', email = '', role = '' } = {}, { rejectWithValue }) => {
@@ -53,6 +69,30 @@ export const declineMentorship = createAsyncThunk(
   }
 );
 
+export const fetchMentorAvailability = createAsyncThunk(
+  'mentorship/fetchAvailability',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/mentorship/api/mentors/me/availability');
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(apiErrorMessage(err, 'Failed to load availability'));
+    }
+  }
+);
+
+export const updateMentorAvailability = createAsyncThunk(
+  'mentorship/updateAvailability',
+  async (available, { rejectWithValue }) => {
+    try {
+      const response = await api.put('/mentorship/api/mentors/me/availability', { available });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(apiErrorMessage(err, 'Failed to update availability'));
+    }
+  }
+);
+
 const upsertById = (items, updated) => {
   const idx = items.findIndex((m) => m.id === updated.id);
   if (idx >= 0) {
@@ -70,6 +110,10 @@ const mentorshipSlice = createSlice({
     error: null,
     actionStatus: 'idle',
     actionError: null,
+    mentorAvailable: null,
+    availabilityStatus: 'idle',
+    availabilityError: null,
+    availabilityActionStatus: 'idle',
   },
   reducers: {
     clearActionStatus: (state) => {
@@ -111,6 +155,30 @@ const mentorshipSlice = createSlice({
       })
       .addCase(declineMentorship.fulfilled, (state, action) => {
         upsertById(state.items, action.payload);
+      })
+      .addCase(fetchMentorAvailability.pending, (state) => {
+        state.availabilityStatus = 'pending';
+        state.availabilityError = null;
+      })
+      .addCase(fetchMentorAvailability.fulfilled, (state, action) => {
+        state.availabilityStatus = 'fulfilled';
+        state.mentorAvailable = action.payload?.available ?? false;
+      })
+      .addCase(fetchMentorAvailability.rejected, (state, action) => {
+        state.availabilityStatus = 'rejected';
+        state.availabilityError = action.payload;
+      })
+      .addCase(updateMentorAvailability.pending, (state) => {
+        state.availabilityActionStatus = 'pending';
+        state.availabilityError = null;
+      })
+      .addCase(updateMentorAvailability.fulfilled, (state, action) => {
+        state.availabilityActionStatus = 'fulfilled';
+        state.mentorAvailable = action.payload?.available ?? false;
+      })
+      .addCase(updateMentorAvailability.rejected, (state, action) => {
+        state.availabilityActionStatus = 'rejected';
+        state.availabilityError = action.payload;
       });
   },
 });
