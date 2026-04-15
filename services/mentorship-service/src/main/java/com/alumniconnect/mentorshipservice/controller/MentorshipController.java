@@ -7,8 +7,7 @@ import org.springframework.http.ResponseEntity;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -16,7 +15,7 @@ public class MentorshipController {
 
     private final RestTemplate restTemplate;
 
-    private Map<Long, String> mentorships = new HashMap<>();
+    private Map<Long, Map<String, Object>> mentorships = new HashMap<>();
     private long counter = 1;
 
     public MentorshipController(RestTemplate restTemplate) {
@@ -39,13 +38,15 @@ public class MentorshipController {
     @PostMapping("/mentorships")
     public ResponseEntity<Map<String, Object>> createMentorship() {
         long id = counter++;
-        mentorships.put(id, "REQUESTED");
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", id);
-        response.put("status", "REQUESTED");
+        Map<String, Object> mentorship = new HashMap<>();
+        mentorship.put("id", id);
+        mentorship.put("status", "REQUESTED");
+        mentorship.put("createdAt", new Date());
 
-        return ResponseEntity.ok(response);
+        mentorships.put(id, mentorship);
+
+        return ResponseEntity.ok(mentorship);
     }
 
     @PatchMapping("/mentorships/{id}/accept")
@@ -54,12 +55,13 @@ public class MentorshipController {
             return ResponseEntity.notFound().build();
         }
 
-        mentorships.put(id, "ACCEPTED");
+        mentorships.get(id).put("status", "ACCEPTED");
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", id);
-        response.put("status", "ACCEPTED");
+        return ResponseEntity.ok(mentorships.get(id));
+    }
 
-        return ResponseEntity.ok(response);
+    @GetMapping("/mentorships")
+    public ResponseEntity<List<Map<String, Object>>> getMentorships() {
+        return ResponseEntity.ok(new ArrayList<>(mentorships.values()));
     }
 }
