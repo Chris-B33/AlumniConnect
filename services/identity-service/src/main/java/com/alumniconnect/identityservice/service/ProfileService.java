@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -17,11 +18,11 @@ import com.alumniconnect.identityservice.repository.UserRepository;
 public class ProfileService {
 
     private final UserRepository users;
-    private final AvatarStore avatarStore;
+    private final AvatarPersistence avatarPersistence;
 
-    public ProfileService(UserRepository users, AvatarStore avatarStore) {
+    public ProfileService(UserRepository users, AvatarPersistence avatarPersistence) {
         this.users = users;
-        this.avatarStore = avatarStore;
+        this.avatarPersistence = avatarPersistence;
     }
 
     public ProfileResponse getProfile(String email) {
@@ -34,6 +35,7 @@ public class ProfileService {
         return ProfileResponse.from(updated);
     }
 
+    @Transactional
     public AvatarResponse updateAvatar(String email, MultipartFile file) {
         User user = findOrThrow(email);
 
@@ -43,7 +45,7 @@ public class ProfileService {
         }
 
         try {
-            avatarStore.put(user.getId(), file.getBytes(), contentType);
+            avatarPersistence.save(user.getId(), file.getBytes(), contentType);
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store avatar");
         }

@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.alumniconnect.identityservice.dto.AvatarResponse;
 import com.alumniconnect.identityservice.dto.ProfileResponse;
 import com.alumniconnect.identityservice.dto.UpdateProfileRequest;
-import com.alumniconnect.identityservice.service.AvatarStore;
+import com.alumniconnect.identityservice.service.AvatarPersistence;
 import com.alumniconnect.identityservice.service.ProfileService;
 
 import jakarta.validation.Valid;
@@ -29,11 +29,11 @@ import org.springframework.http.HttpStatus;
 public class ProfileController {
 
     private final ProfileService profileService;
-    private final AvatarStore avatarStore;
+    private final AvatarPersistence avatarPersistence;
 
-    public ProfileController(ProfileService profileService, AvatarStore avatarStore) {
+    public ProfileController(ProfileService profileService, AvatarPersistence avatarPersistence) {
         this.profileService = profileService;
-        this.avatarStore = avatarStore;
+        this.avatarPersistence = avatarPersistence;
     }
 
     @GetMapping
@@ -53,12 +53,12 @@ public class ProfileController {
 
     @GetMapping("/avatar/{userId}")
     public ResponseEntity<byte[]> getAvatar(@PathVariable String userId) {
-        return avatarStore.get(userId)
-                .map(entry -> ResponseEntity.ok()
-                        .contentType(entry.contentType() != null
-                                ? MediaType.parseMediaType(entry.contentType())
+        return avatarPersistence.load(userId)
+                .map(blob -> ResponseEntity.ok()
+                        .contentType(blob.contentType() != null
+                                ? MediaType.parseMediaType(blob.contentType())
                                 : MediaType.APPLICATION_OCTET_STREAM)
-                        .body(entry.data()))
+                        .body(blob.data()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avatar not found"));
     }
 

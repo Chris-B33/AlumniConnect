@@ -1,7 +1,8 @@
 # Prerequisites: from repo root run  mvn clean package -DskipTests
 # Then:  docker compose up
 #
-# Optional data stack (Postgres, Redis, MinIO) — does NOT start by default so
+# Postgres starts with the stack (identity, event, mentorship use Flyway + JPA).
+# Optional extras (Redis, MinIO) — use profile `platform` — see README.
 #
 # Eureka clients use the Compose DNS name eureka-server. Healthchecks ensure
 # config and Eureka accept TCP connections before dependent services start.
@@ -59,11 +60,16 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     working_dir: /app
     environment:
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
       ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-alumni_connect}?currentSchema=identity
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-alumni}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-alumni_dev_change_me}
     volumes:
       - ./services/identity-service/target/identity-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
     command: ["java", "-jar", "/app/app.jar"]
@@ -77,11 +83,16 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     working_dir: /app
     environment:
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
       ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-alumni_connect}?currentSchema=mentorship
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-alumni}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-alumni_dev_change_me}
     volumes:
       - ./services/mentorship-service/target/mentorship-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
     command: ["java", "-jar", "/app/app.jar"]
@@ -95,11 +106,16 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     working_dir: /app
     environment:
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
       ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-alumni_connect}?currentSchema=event
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-alumni}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-alumni_dev_change_me}
     volumes:
       - ./services/event-service/target/event-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
     command: ["java", "-jar", "/app/app.jar"]
@@ -129,10 +145,8 @@ services:
     ports:
       - "8080:8080"
 
-  # --- Optional profile `platform`: not started unless you pass --profile platform ---
+  # --- Postgres: required by identity, event, and mentorship services (Flyway + JPA) ---
   postgres:
-    profiles:
-      - platform
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-alumni}

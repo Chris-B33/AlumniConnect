@@ -219,13 +219,17 @@ From the repository root:
 1. `mvn clean package -DskipTests`
 2. `docker compose up`
 
-**Optional data stack (Postgres, Redis, MinIO)** — for persistence, search, uploads, or chat work **without** changing the default stack. Teammates who do not pass the profile see **no** extra containers and **no** behaviour change.
+**PostgreSQL** starts with the default stack: **identity-service**, **event-service**, and **mentorship-service** use **Flyway + JPA** against database **`alumni_connect`** (schemas `identity`, `event`, `mentorship`). Local runs without Docker use an **embedded H2** database (see each service `application.yml`), not in-process fake repositories.
+
+**What is persisted (no domain data only in the JVM):** **`identity.users`** (accounts, profile fields, avatar URL), **`identity.user_avatars`** (uploaded image bytes + content type), **`event.events`** (and Flyway seed data), **`event.event_registrations`** (when registering with `?email=` on `POST .../register`), **`mentorship.mentorships`** and **`mentorship.mentor_availability`**. The browser still stores the **JWT** in `localStorage` for login (standard for SPAs); that is not server-side memory.
+
+**Optional profile `platform`** adds **Redis** and **MinIO** (caching / uploads) — same as before.
 
 ```bash
 docker compose --profile platform up
 ```
 
-See **[docs/platform.md](docs/platform.md)** for ports, JDBC hints, and who owns the next integration steps. Optional env overrides: copy **`compose.platform.env.example`** to **`compose.platform.env`** (gitignored) and run `docker compose --env-file compose.platform.env --profile platform up`.
+See **[docs/platform.md](docs/platform.md)** for ports and optional env overrides: copy **`compose.platform.env.example`** to **`compose.platform.env`** (gitignored) as needed.
 
 Compose project name: **`alumniconnect`**. Images use **`eclipse-temurin:17-jre`**; each service runs **`java -jar`** against the matching **`target/*-0.0.1-SNAPSHOT.jar`** mounted read-only.
 
@@ -237,7 +241,7 @@ Compose project name: **`alumniconnect`**. Images use **`eclipse-temurin:17-jre`
 | identity-service | 8081 | |
 | mentorship-service | 8082 | |
 | event-service | 8083 | |
-| postgres | 5432 | **Profile `platform` only** — PostgreSQL 16; init scripts under `docker/platform/postgres/init/`. |
+| postgres | 5432 | PostgreSQL 16 — required by identity, event, and mentorship services. |
 | redis | 6379 | **Profile `platform` only** — Redis 7. |
 | minio | 9000 (S3 API), 9001 (console) | **Profile `platform` only** — S3-compatible storage for future uploads. |
 
@@ -245,8 +249,11 @@ Compose project name: **`alumniconnect`**. Images use **`eclipse-temurin:17-jre`
 
 - **`ALUMNI_CONFIG_IMPORT=configserver:http://config-server:8888`** — Config Server URL for **eureka-server**, **identity-service**, **mentorship-service**, and **event-service**. In each service, `application.yml` uses `${ALUMNI_CONFIG_IMPORT:configserver:http://localhost:8888}` so a normal local run still targets **`http://localhost:8888`** when the variable is unset.
 - **`EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/`** — Eureka for all Eureka clients in Compose.
+- **`SPRING_DATASOURCE_*`** — set in Compose for JDBC to Postgres (`currentSchema` per service). Override with env if needed.
 
-**Healthchecks:** TCP checks on **config-server:8888** and **eureka-server:8761** so dependent containers start only after those ports accept connections.
+**Healthchecks:** TCP checks on **config-server:8888** and **eureka-server:8761** so dependent containers start only after those ports accept connections. **Postgres** exposes **`pg_isready`** so app services start after the database accepts connections.
+
+**Flyway:** Identity, event, and mentorship each use a **dedicated** `spring.flyway.table` in Postgres so migration versions do not clash on the shared `alumni_connect` database. If you change SQL under `db/migration` after a dev DB was already migrated, either run **`docker compose down -v`** (wipes the Postgres volume) or use Flyway **repair** against your DB — otherwise you may see checksum validation errors on startup.
 
 ---
 
@@ -280,7 +287,7 @@ Content-Type: application/json
 {"email":"student@example.com","password":"password123"}
 ```
 
-Responses are JSON: **`accessToken`** (JWT), **`tokenType`** (`Bearer`), **`expiresInSeconds`**. `role` must be **`Student`** or **`Alumni`**. Password must be at least **8** characters. Users are stored **in memory** in this thin slice (restart clears them). Signing material comes from **`identity-service.yml`** on the Config Server (`jwt.secret`, `jwt.expiration-seconds`); do not commit real production secrets.
+Responses are JSON: **`accessToken`** (JWT), **`tokenType`** (`Bearer`), **`expiresInSeconds`**. `role` must be **`Student`** or **`Alumni`**. Password must be at least **8** characters. Registered users are persisted in **PostgreSQL** (`identity.users` when using Docker Compose; **H2** in-memory when running a service alone without Postgres). Signing material comes from **`identity-service.yml`** on the Config Server (`jwt.secret`, `jwt.expiration-seconds`); do not commit real production secrets.
 
 ---
 
