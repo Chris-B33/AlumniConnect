@@ -59,8 +59,13 @@ function ProfilePage() {
   // Fall back to JWT claims if the API hasn't landed yet
   const email     = data?.email     ?? user?.email ?? '—';
   const roleLabel = (data?.role ?? user?.role) === 'ALUMNI' ? 'Alumni' : 'Student';
-  const avatarUrl = data?.avatarUrl ?? null;
   const initials  = email.slice(0, 2).toUpperCase();
+
+  // avatarUrl is a gateway-relative path like /identity/api/profile/avatar/{id}.
+  // Prefix with the API base so the browser fetches from the gateway, not Vite.
+  const API_BASE  = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+  const rawUrl    = data?.avatarUrl ?? null;
+  const avatarUrl = rawUrl?.startsWith('/') ? `${API_BASE}${rawUrl}` : rawUrl;
 
   return (
     <>
