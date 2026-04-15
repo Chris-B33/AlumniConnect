@@ -46,7 +46,9 @@ public class SecurityConfig {
                                 "/api/config",
                                 "/actuator/**",
                                 "/error",
-                                "/api/profile/avatar/**")
+                                "/api/profile/avatar/**",
+                                "/api/users/alumni",
+                                "/api/users/profile/**")
                         .permitAll()
                         // Ant matchers: Spring MVC-style string patterns can miss Springdoc routes and
                         // incorrectly fall through to authenticated() → 401 on Swagger and /v3/api-docs.

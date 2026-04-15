@@ -1,5 +1,7 @@
 package com.alumniconnect.identityservice.repository;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +31,11 @@ public class InMemoryUserRepository implements UserRepository {
     @Override
     public void save(User user) {
         usersByEmail.put(normalize(user.getEmail()), user);
+    }
+
+    @Override
+    public Collection<User> findAll() {
+        return Collections.unmodifiableCollection(usersByEmail.values());
     }
 
     private static String normalize(String email) {
