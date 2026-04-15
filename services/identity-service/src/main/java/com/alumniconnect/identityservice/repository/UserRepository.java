@@ -1,5 +1,6 @@
 package com.alumniconnect.identityservice.repository;
 
+import java.util.Collection;
 import java.util.Optional;
 
 import com.alumniconnect.identityservice.domain.User;
@@ -11,4 +12,6 @@ public interface UserRepository {
     boolean existsByEmailIgnoreCase(String email);
 
     void save(User user);
+
+    Collection<User> findAll();
 }
