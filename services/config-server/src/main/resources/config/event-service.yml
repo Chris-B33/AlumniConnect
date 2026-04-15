@@ -1,2 +1,8 @@
 server:
   port: 8083
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    config-url: /event/v3/api-docs/swagger-config
+    url: /event/v3/api-docs

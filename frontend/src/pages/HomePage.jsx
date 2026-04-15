@@ -1,33 +1,42 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../features/auth/authSlice';
-import { selectEvents, fetchEvents } from '../features/events/eventsSlice';
-import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectAuth } from '../features/auth/authSlice';
+import NavBar from '../components/NavBar';
+import Footer from '../components/Footer';
+import styles from './HomePage.module.css';
 
 function HomePage() {
-  const dispatch = useDispatch();
-  const { items, status, error } = useSelector(selectEvents);
+  const { user } = useSelector(selectAuth);
 
-  useEffect(() => {
-    dispatch(fetchEvents());
-  }, [dispatch]);
+  const greeting = user?.role === 'ALUMNI' ? 'Welcome back, Alumni' : user?.role === 'STUDENT' ? 'Welcome, Student' : 'Welcome';
+  const subtext = user?.email ?? 'University of Limerick';
 
   return (
-    <main>
-      <h1>Welcome to AlumniConnect</h1>
-      <button onClick={() => dispatch(logout())}>Sign Out</button>
+    <>
+      <NavBar />
+      <main className={styles.page}>
+        <div className={styles.hero}>
+          <p className={styles.heroLabel}>AlumniConnect</p>
+          <h1>{greeting}</h1>
+          <p className={styles.heroSub}>{subtext}</p>
+        </div>
 
-      <section>
-        <h2>Events</h2>
-        {status === 'pending' && <p>Loading events…</p>}
-        {status === 'rejected' && <p role="alert">{error}</p>}
-        {status === 'fulfilled' && items.length === 0 && <p>No events yet.</p>}
-        <ul>
-          {items.map((event) => (
-            <li key={event.id}>{event.title}</li>
-          ))}
-        </ul>
-      </section>
-    </main>
+        <div className={styles.cards}>
+          <Link to="/events" className={styles.card}>
+            <div className={styles.cardIcon}>📅</div>
+            <h2>Events</h2>
+            <p>Browse upcoming alumni and university events</p>
+          </Link>
+
+          <Link to="/mentorship" className={styles.card}>
+            <div className={styles.cardIcon}>🤝</div>
+            <h2>Mentorship</h2>
+            <p>Find a mentor or offer your experience as one</p>
+          </Link>
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { loginUser, selectAuth } from '../features/auth/authSlice';
 import styles from './LoginPage.module.css';
 
@@ -72,6 +72,10 @@ function LoginPage() {
 
           {error && <p className={styles.error} role="alert">{error}</p>}
         </form>
+
+        <p className={styles.switchLink}>
+          No account? <Link to="/register">Create one</Link>
+        </p>
       </div>
     </main>
   );

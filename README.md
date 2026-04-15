@@ -6,6 +6,53 @@ University of Limerick
 
 ---
 
+## Collaboration and Git workflow
+
+This repository is a **team effort**: one person may upload or push snapshots, while **ownership** is shown through **feature branches**, **reviews**, and the [team table](#team-and-service-ownership) below.
+
+| Branch | Purpose |
+|--------|---------|
+| **`main`** | Stable hand-in line — left quiet during day-to-day work; updated for agreed releases (for example a final **`develop` → `main`** PR with a clear story in the PR body). |
+| **`develop`** | Integration branch (“development”). Feature branches merge here via PR after review. |
+| **Feature branches** | Per-person work. Target **`develop`** in PRs, not `main`, unless it is an agreed release. |
+
+Continuous integration (`.github/workflows/ci.yml`) runs on **`main`** and **`develop`**.
+
+---
+
+## Quick links
+
+| Resource | Location |
+|----------|----------|
+| Course wiki | [github.com/Chris-B33/AlumniConnect/wiki](https://github.com/Chris-B33/AlumniConnect/wiki) |
+| GitHub repository | [github.com/Chris-B33/AlumniConnect](https://github.com/Chris-B33/AlumniConnect) |
+| Clone (HTTPS) | `https://github.com/Chris-B33/AlumniConnect.git` |
+| System context diagram (Mermaid) | [docs/system-context.md](docs/system-context.md) |
+
+---
+
+## Team and service ownership
+
+| Teammate | Role (narrative) | Review / merge (from plan) |
+|----------|------------------|----------------------------|
+| **Noa Car** | DevOps and integration lead - gateway routing, API docs (Springdoc/Swagger), CORS, environments; coordination on `main` (`api-gateway`, Config Server Spring app, `docker-compose.yml`, workflows, root `pom.xml`) | As agreed per PR |
+| **Shauna Kearney** | System architect and repository lead - structure, decomposition, API contracts, quality attributes; root `README.md`, `docs/`, `adr/` | PR → **Noa** or **Mark** → Shauna merges |
+| **Mark Hughes** | Backend core service lead - authentication and user management (`identity-service`, `identity-service.yml` in Config Server when needed) | PR → **Shauna**; Mark merges when **CI is green** |
+| **Christopher Brophy** | Frontend lead - modular UI, protected routes, Redux, async request lifecycle (`frontend/`) | PR to `develop` |
+| **Michael McCarthy** | Backend domain services lead - mentorship and event bounded contexts (`mentorship-service`, `event-service`, related Config Server YAML) | PR to `develop` |
+
+---
+
+## First-time run order (about 15 minutes)
+
+1. Install **JDK 17**, **Maven 3.9+**, and **Docker** (Compose v2).
+2. From the repository root, build all modules: `mvn clean package -DskipTests`.
+3. Start the stack with **`docker compose up`** (see [Docker Compose](#docker-compose)): **Config Server** → **Eureka** → **Identity**, **Mentorship**, **Event** → **API Gateway** (Compose health checks enforce **Config** and **Eureka** first).
+4. Open **Eureka** at `http://localhost:8761` and confirm instances are **UP**.
+5. Call health and sample routes (see [Verifying the stack](#verifying-the-stack)).
+
+---
+
 ## Project Overview  
 
 **AlumniConnect** is a distributed, microservices-based web platform designed to facilitate structured engagement between university alumni and current students.
@@ -79,9 +126,11 @@ The frontend follows a modular component-based architecture:
 - Protected routes
 - Axios interceptors for 401 handling
 - Role-based route control
-- Environment variable configuration
+- Environment variable configuration (`VITE_API_BASE_URL`; optional locally - defaults to the API Gateway at `http://localhost:8080`)
 
 The structure supports maintainability, scalability, and clean separation of responsibilities.
+
+**Run the UI:** from `frontend/`, run `npm install` then `npm run dev` (Vite uses port **3000** per `vite.config.js`).
 
 ---
 
@@ -151,7 +200,13 @@ The **`api-gateway`** service (port **8080**) is the single HTTP entry point for
 - `http://localhost:8080/mentorship/api/mentorship/check`
 - `http://localhost:8080/event/api/ping`
 
-**CORS** is enabled for typical Vite (**`5173`**) and CRA (**`3000`**) dev origins.
+**OpenAPI/Swagger** (domain services):
+
+- Identity: `http://localhost:8080/identity/swagger-ui/index.html` and `http://localhost:8080/identity/v3/api-docs`
+- Mentorship: `http://localhost:8080/mentorship/swagger-ui/index.html` and `http://localhost:8080/mentorship/v3/api-docs`
+- Event: `http://localhost:8080/event/swagger-ui/index.html` and `http://localhost:8080/event/v3/api-docs`
+
+**CORS** (global on the gateway for **`[/**]`**): allows **`http://localhost:5173`**, **`http://localhost:3000`**, and the same ports on **`127.0.0.1`**; methods **GET–PATCH, OPTIONS**; headers **`Authorization`**, **`Content-Type`**, **`Accept`**; **`allowCredentials: true`**; preflight **`maxAge` 3600s**. Extend `application.yml` if the team adds another dev origin (for example HTTPS or a different port).
 
 ---
 
@@ -164,6 +219,14 @@ From the repository root:
 1. `mvn clean package -DskipTests`
 2. `docker compose up`
 
+**Optional data stack (Postgres, Redis, MinIO)** — for persistence, search, uploads, or chat work **without** changing the default stack. Teammates who do not pass the profile see **no** extra containers and **no** behaviour change.
+
+```bash
+docker compose --profile platform up
+```
+
+See **[docs/platform.md](docs/platform.md)** for ports, JDBC hints, and who owns the next integration steps. Optional env overrides: copy **`compose.platform.env.example`** to **`compose.platform.env`** (gitignored) and run `docker compose --env-file compose.platform.env --profile platform up`.
+
 Compose project name: **`alumniconnect`**. Images use **`eclipse-temurin:17-jre`**; each service runs **`java -jar`** against the matching **`target/*-0.0.1-SNAPSHOT.jar`** mounted read-only.
 
 | Service | Host port | Notes |
@@ -174,6 +237,9 @@ Compose project name: **`alumniconnect`**. Images use **`eclipse-temurin:17-jre`
 | identity-service | 8081 | |
 | mentorship-service | 8082 | |
 | event-service | 8083 | |
+| postgres | 5432 | **Profile `platform` only** — PostgreSQL 16; init scripts under `docker/platform/postgres/init/`. |
+| redis | 6379 | **Profile `platform` only** — Redis 7. |
+| minio | 9000 (S3 API), 9001 (console) | **Profile `platform` only** — S3-compatible storage for future uploads. |
 
 **Environment (Compose):**
 
@@ -191,6 +257,30 @@ After **`docker compose up`**, quick checks:
 - **Eureka:** `http://localhost:8761` — instances for API-GATEWAY, IDENTITY-SERVICE, MENTORSHIP-SERVICE, EVENT-SERVICE should be **UP**.
 - **Actuator (JSON):** `http://localhost:8081/actuator/health`, `8082`, `8083`, `8080` — expect **`"status":"UP"`**.
 - **Through the gateway:** the three example URLs under [API Gateway](#api-gateway) should return **HTTP 200**.
+
+### Identity — register and login (JWT)
+
+`POST /api/auth/register` and `POST /api/auth/login` on **identity-service** accept JSON bodies. Through the gateway, prefix with **`/identity`** (first segment stripped before forwarding).
+
+**Register** (direct to service):
+
+```http
+POST http://localhost:8081/api/auth/register
+Content-Type: application/json
+
+{"email":"student@example.com","password":"password123","role":"Student"}
+```
+
+**Login** (via gateway):
+
+```http
+POST http://localhost:8080/identity/api/auth/login
+Content-Type: application/json
+
+{"email":"student@example.com","password":"password123"}
+```
+
+Responses are JSON: **`accessToken`** (JWT), **`tokenType`** (`Bearer`), **`expiresInSeconds`**. `role` must be **`Student`** or **`Alumni`**. Password must be at least **8** characters. Users are stored **in memory** in this thin slice (restart clears them). Signing material comes from **`identity-service.yml`** on the Config Server (`jwt.secret`, `jwt.expiration-seconds`); do not commit real production secrets.
 
 ---
 

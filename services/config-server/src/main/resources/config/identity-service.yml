@@ -4,3 +4,24 @@ server:
 app:
   config:
     message: Loaded from Config Server
+
+# JWT signing (never commit real production secrets; override via env/secret store in deployment)
+jwt:
+  # HS256 requires a key material length >= 256 bits; this dev default is intentionally long.
+  secret: "AlumniConnectDevOnlyJwtSigningKey_ChangeMe_UseEnvInProd_0123456789abcdef"
+  expiration-seconds: 28800
+
+# MinIO object storage — used for profile avatar uploads.
+# In Docker, override MINIO_ENDPOINT to http://minio:9000 via the identity-service
+# environment block in docker-compose.yml (or compose.platform.env).
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: avatars
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    config-url: /identity/v3/api-docs/swagger-config
+    url: /identity/v3/api-docs

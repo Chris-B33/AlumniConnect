@@ -10,3 +10,17 @@ body {
   color: #1a3a2a;
   min-height: 100vh;
 }
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root > * {
+  flex-shrink: 0;
+}
+
+#root main {
+  flex: 1;
+}

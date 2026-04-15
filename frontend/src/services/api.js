@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// Default matches local API Gateway; clones work without creating frontend/.env.
+// Override with VITE_API_BASE_URL (see frontend/.env.example) for staging/production builds.
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },

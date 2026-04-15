@@ -1,0 +1,6 @@
+### Create mentorship
+POST http://localhost:8080/api/mentorships
+Content-Type: application/json
+
+### Get mentorships
+GET http://localhost:8080/api/mentorships
