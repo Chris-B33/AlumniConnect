@@ -284,6 +284,16 @@ Responses are JSON: **`accessToken`** (JWT), **`tokenType`** (`Bearer`), **`expi
 
 ---
 
+## Architecture Decision Records
+
+Traceable decisions for the monorepo, runtime discovery/configuration, and the HTTP gateway edge:
+
+- [ADR-001 — Monorepo](adr/ADR-001-monorepo.md)
+- [ADR-002 — Eureka & Config Server](adr/ADR-002-eureka-config.md)
+- [ADR-003 — API Gateway](adr/ADR-003-gateway.md)
+
+---
+
 ## Continuous integration
 
 GitHub Actions workflow **`.github/workflows/ci.yml`** runs **`mvn -B verify`** on pushes and pull requests to **`main`** and **`develop`** (JDK **17**, Temurin, Maven cache enabled).
