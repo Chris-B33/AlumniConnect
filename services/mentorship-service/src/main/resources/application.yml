@@ -1,6 +1,5 @@
 spring:
   application:
     name: mentorship-service
-  cloud:
-    config:
-      enabled: false
+  config:
+    import: ${ALUMNI_CONFIG_IMPORT:configserver:http://localhost:8888}
