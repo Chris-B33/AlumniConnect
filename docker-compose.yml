@@ -1,6 +1,9 @@
 # Prerequisites: from repo root run  mvn clean package -DskipTests
 # Then:  docker compose up
 #
+# Postgres starts with the stack (identity, event, mentorship use Flyway + JPA).
+# Optional extras (Redis, MinIO) — use profile `platform` — see README.
+#
 # Eureka clients use the Compose DNS name eureka-server. Healthchecks ensure
 # config and Eureka accept TCP connections before dependent services start.
 #
@@ -57,11 +60,16 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     working_dir: /app
     environment:
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
       ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-alumni_connect}?currentSchema=identity
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-alumni}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-alumni_dev_change_me}
     volumes:
       - ./services/identity-service/target/identity-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
     command: ["java", "-jar", "/app/app.jar"]
@@ -75,11 +83,16 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     working_dir: /app
     environment:
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
       ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-alumni_connect}?currentSchema=mentorship
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-alumni}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-alumni_dev_change_me}
     volumes:
       - ./services/mentorship-service/target/mentorship-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
     command: ["java", "-jar", "/app/app.jar"]
@@ -93,11 +106,16 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     working_dir: /app
     environment:
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
       ALUMNI_CONFIG_IMPORT: configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-alumni_connect}?currentSchema=event
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-alumni}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-alumni_dev_change_me}
     volumes:
       - ./services/event-service/target/event-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
     command: ["java", "-jar", "/app/app.jar"]
@@ -126,3 +144,59 @@ services:
     command: ["java", "-jar", "/app/app.jar"]
     ports:
       - "8080:8080"
+
+  # --- Postgres: required by identity, event, and mentorship services (Flyway + JPA) ---
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-alumni}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-alumni_dev_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-alumni_connect}
+    volumes:
+      - alumniconnect-postgres-data:/var/lib/postgresql/data
+      - ./docker/platform/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
+  redis:
+    profiles:
+      - platform
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  minio:
+    profiles:
+      - platform
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - alumniconnect-minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/minio/health/live || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+
+volumes:
+  alumniconnect-postgres-data:
+  alumniconnect-minio-data:

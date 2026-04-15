@@ -1,0 +1,10 @@
+### Create event
+POST http://localhost:8080/api/events
+Content-Type: application/json
+
+{
+  "title": "Test Event"
+}
+
+### Get events
+GET http://localhost:8080/api/events

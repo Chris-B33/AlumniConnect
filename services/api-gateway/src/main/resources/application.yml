@@ -6,6 +6,8 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      # Browser → gateway (React/Vite on localhost). Downstream services are server-side;
+      # they do not need duplicate CORS for traffic that only goes through the gateway.
       globalcors:
         cors-configurations:
           '[/**]':
@@ -21,8 +23,15 @@ spring:
               - PATCH
               - DELETE
               - OPTIONS
-            allowedHeaders: '*'
+            # Explicit allowlist (no '*') so preflight matches what the SPA actually sends:
+            # JSON bodies + Bearer JWT on API calls.
+            allowedHeaders:
+              - Authorization
+              - Content-Type
+              - Accept
             allowCredentials: true
+            # Cache successful preflight at the browser (seconds); reduces OPTIONS chatter during dev.
+            maxAge: 3600
       routes:
         - id: identity-service
           uri: lb://identity-service

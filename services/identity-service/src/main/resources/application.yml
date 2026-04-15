@@ -1,5 +1,37 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: identity-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:identity;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  flyway:
+    # Own history table — multiple services share one Postgres DB; default `flyway_schema_history` would collide on version numbers.
+    table: flyway_schema_history_identity
+    schemas: identity
+    default-schema: identity
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: identity
   config:
-    import: ${ALUMNI_CONFIG_IMPORT:configserver:http://localhost:8888}
+    # In Docker/CI, ALUMNI_CONFIG_IMPORT=configserver:http://config-server:8888 (required, no optional:).
+    # Locally without a running Config Server, defaults to optional: so the service still starts.
+    import: ${ALUMNI_CONFIG_IMPORT:optional:configserver:http://localhost:8888}
+
+# Dev-only fallbacks: overridden by Config Server in all deployed environments.
+jwt:
+  secret: "AlumniConnectDevOnlyJwtSigningKey_ChangeMe_UseEnvInProd_0123456789abcdef"
+  expiration-seconds: 28800
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket: avatars
